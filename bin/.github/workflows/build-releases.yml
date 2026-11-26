@@ -1,0 +1,149 @@
+name: Build Studio Cut Releases
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Bundle macOS arm64 ffmpeg
+        run: |
+          brew install ffmpeg
+          mkdir -p bin
+          cp "$(which ffmpeg)" bin/ffmpeg
+          chmod +x bin/ffmpeg
+
+      - name: Build Studio Cut.app (arm64)
+        run: |
+          pyinstaller --noconfirm --windowed --name "Studio Cut" \
+            --collect-all faster_whisper \
+            --collect-all ctranslate2 \
+            --add-data "ui:ui" \
+            --add-data "bin/ffmpeg:bin" \
+            app.py
+
+      - name: Package zip for Apple Silicon
+        run: |
+          mkdir -p release_assets
+          ditto -c -k --keepParent "dist/Studio Cut.app" "release_assets/Studio-Cut-macOS-AppleSilicon.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64
+          path: release_assets/Studio-Cut-macOS-AppleSilicon.zip
+
+  build-macos-intel:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Bundle macOS x86_64 ffmpeg
+        run: |
+          brew install ffmpeg
+          mkdir -p bin
+          cp "$(which ffmpeg)" bin/ffmpeg
+          chmod +x bin/ffmpeg
+
+      - name: Build Studio Cut.app (x86_64)
+        run: |
+          pyinstaller --noconfirm --windowed --name "Studio Cut" \
+            --collect-all faster_whisper \
+            --collect-all ctranslate2 \
+            --add-data "ui:ui" \
+            --add-data "bin/ffmpeg:bin" \
+            app.py
+
+      - name: Package zip for Intel Mac
+        run: |
+          mkdir -p release_assets
+          ditto -c -k --keepParent "dist/Studio Cut.app" "release_assets/Studio-Cut-macOS-Intel.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-x64
+          path: release_assets/Studio-Cut-macOS-Intel.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Bundle Windows ffmpeg.exe
+        shell: pwsh
+        run: |
+          winget install --id Gyan.FFmpeg -e --silent --accept-source-agreements --accept-package-agreements
+          $found = Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WinGet\Packages", "C:\Program Files" -Filter "ffmpeg.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $found) { throw "ffmpeg.exe not found after winget install" }
+          New-Item -ItemType Directory -Force -Path "bin" | Out-Null
+          Copy-Item $found "bin\ffmpeg.exe" -Force
+
+      - name: Build Studio Cut.exe (Windows)
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --windowed --name "Studio Cut" `
+            --collect-all faster_whisper `
+            --collect-all ctranslate2 `
+            --add-data "ui;ui" `
+            --add-data "bin\ffmpeg.exe;bin" `
+            app.py
+
+      - name: Package zip for Windows
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "release_assets" | Out-Null
+          Compress-Archive -Path "dist\Studio Cut\*" -DestinationPath "release_assets\Studio-Cut-Windows-x64.zip" -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: release_assets/Studio-Cut-Windows-x64.zip
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-macos-arm64, build-macos-intel, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: all_assets
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: all_assets/*

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Studio Cut</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>Studio Cut</span>
+    </div>
+    <div class="actions">
+      <button id="btn-open" class="btn btn-secondary">Open Video</button>
+      <button id="btn-drafts" class="btn btn-secondary">Saved Drafts</button>
+      <button id="btn-save-draft" class="btn btn-secondary" disabled>Save Draft</button>
+      <button id="btn-undo" class="btn btn-secondary" disabled>Undo</button>
+      <button id="btn-export" class="btn btn-primary" disabled>Export Video</button>
+    </div>
+  </header>
+
+  <div id="drafts-modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Saved Video Drafts</h3>
+        <button id="btn-close-drafts" class="btn btn-small btn-secondary">Close</button>
+      </div>
+      <p class="hint">Drafts auto-save as you edit so your dad can take a break or switch videos anytime.</p>
+      <ul id="drafts-list" class="item-list"></ul>
+    </div>
+  </div>
+
+  <main class="workspace">
+    <!-- Top-Left: Live Preview Stage -->
+    <section class="preview-pane">
+      <div id="video-stage" class="video-stage">
+        <video id="video-player" preload="metadata"></video>
+        <div id="overlay-title" class="overlay-title hidden" title="Drag to move anywhere on video • Click text to edit • Drag bottom-right corner to resize">
+          <span id="overlay-title-text" class="overlay-title-text" contenteditable="true" spellcheck="false"></span>
+          <span id="title-resize-handle" class="resize-handle" title="Drag to enlarge or shrink section title"></span>
+        </div>
+        <div id="overlay-subtitle" class="overlay-subtitle hidden" title="Drag to move anywhere on video • Click text to edit • Drag bottom-right corner to resize">
+          <span id="overlay-subtitle-text" class="overlay-subtitle-text" contenteditable="true" spellcheck="false"></span>
+          <span id="sub-resize-handle" class="resize-handle" title="Drag to enlarge or shrink caption"></span>
+        </div>
+      </div>
+
+      <div class="transport-bar">
+        <button id="btn-play" class="btn btn-small" disabled>Play</button>
+        <span id="time-readout" class="time-readout">00:00:00 / 00:00:00</span>
+        <div class="edit-actions">
+          <button id="btn-split" class="btn btn-small btn-accent" disabled>Split</button>
+          <button id="btn-delete-clip" class="btn btn-small btn-danger" disabled>Delete Clip</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top-Right: Titles & Subtitles -->
+    <aside class="inspector-pane">
+      <div class="tabs">
+        <button class="tab active" data-tab="titles">Section Titles</button>
+        <button class="tab" data-tab="subtitles">Subtitles</button>
+      </div>
+
+      <div id="panel-titles" class="tab-panel active">
+        <p class="hint">Pause where you want a title, type it below, and add it at the playhead. Drag on video to move or resize.</p>
+        <div class="form-row">
+          <input id="title-text" type="text" placeholder="Section title (e.g., Part 2: Q&A)" />
+          <div class="mini-grid">
+            <label>Duration (s): <input id="title-dur" type="number" step="0.5" min="0.5" value="4" /></label>
+            <button id="btn-add-title" class="btn btn-small btn-accent">+ Add at Playhead</button>
+          </div>
+        </div>
+        <ul id="titles-list" class="item-list"></ul>
+      </div>
+
+      <div id="panel-subtitles" class="tab-panel">
+        <p class="hint">Auto-generate captions or add lines. Drag captions anywhere on the video, drag their corner to resize, or click text to edit.</p>
+        <div class="form-row">
+          <div class="mini-grid">
+            <label>Model:
+              <select id="whisper-model">
+                <option value="tiny">Tiny (Fastest)</option>
+                <option value="base" selected>Base (Balanced)</option>
+                <option value="small">Small (More Accurate)</option>
+              </select>
+            </label>
+            <button id="btn-auto-subs" class="btn btn-small btn-primary" disabled>Auto Captions</button>
+          </div>
+          <textarea id="sub-text" rows="2" placeholder="Type subtitle line..."></textarea>
+          <div class="mini-grid">
+            <label>Duration (s): <input id="sub-dur" type="number" step="0.5" min="0.5" value="3" /></label>
+            <button id="btn-add-sub" class="btn btn-small btn-accent">+ Add at Playhead</button>
+          </div>
+        </div>
+        <ul id="subs-list" class="item-list"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Bottom: Interactive Split & Trim Timeline -->
+  <footer class="timeline-pane">
+    <div class="timeline-header">
+      <span>Drag red line to scrub • Drag clip left/right edges to trim/extend that clip • Select a clip to split or delete</span>
+      <span id="status-msg" class="status-msg">Open a video file or Saved Drafts to start.</span>
+    </div>
+    <div id="timeline-track" class="timeline-track">
+      <div id="timeline-clips" class="timeline-clips"></div>
+      <div id="playhead" class="playhead"></div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

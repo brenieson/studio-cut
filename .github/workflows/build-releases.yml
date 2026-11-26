@@ -34,10 +34,13 @@ jobs:
       - name: Build Studio Cut.app (arm64)
         run: |
           python -m PyInstaller --noconfirm --windowed --name "Studio Cut" \
-            --collect-all faster_whisper \
-            --collect-all ctranslate2 \
-            --add-data "ui:ui" \
-            --add-data "bin/ffmpeg:bin" \
+            --collect-all webview `
+            --collect-all pythonnet `
+            --collect-all clr_loader `
+            --collect-all faster_whisper `
+            --collect-all ctranslate2 `
+            --add-data "ui;ui" `
+            --add-data "bin\ffmpeg.exe;bin" `
             app.py
 
       - name: Package zip for Apple Silicon

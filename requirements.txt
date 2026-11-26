@@ -1,0 +1,4 @@
+pywebview
+faster-whisper
+av==18.1.1
+pyinstaller

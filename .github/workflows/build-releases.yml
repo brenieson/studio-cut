@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
 
       - name: Bundle macOS arm64 ffmpeg
         run: |
@@ -33,7 +33,7 @@ jobs:
 
       - name: Build Studio Cut.app (arm64)
         run: |
-          pyinstaller --noconfirm --windowed --name "Studio Cut" \
+          python -m PyInstaller --noconfirm --windowed --name "Studio Cut" \
             --collect-all faster_whisper \
             --collect-all ctranslate2 \
             --add-data "ui:ui" \
@@ -62,7 +62,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
 
       - name: Bundle macOS x86_64 ffmpeg
         run: |
@@ -73,7 +73,7 @@ jobs:
 
       - name: Build Studio Cut.app (x86_64)
         run: |
-          pyinstaller --noconfirm --windowed --name "Studio Cut" \
+          python -m PyInstaller --noconfirm --windowed --name "Studio Cut" \
             --collect-all faster_whisper \
             --collect-all ctranslate2 \
             --add-data "ui:ui" \
@@ -100,9 +100,10 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
+        shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
 
       - name: Bundle Windows ffmpeg.exe
         shell: pwsh
@@ -116,7 +117,7 @@ jobs:
       - name: Build Studio Cut.exe (Windows)
         shell: pwsh
         run: |
-          pyinstaller --noconfirm --windowed --name "Studio Cut" `
+          python -m PyInstaller --noconfirm --windowed --name "Studio Cut" `
             --collect-all faster_whisper `
             --collect-all ctranslate2 `
             --add-data "ui;ui" `
